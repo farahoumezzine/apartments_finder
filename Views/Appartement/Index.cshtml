@@ -1,0 +1,82 @@
+﻿
+@model List<miniprojet.Models.Appartement>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            @if (ViewBag.WelcomeMessage != null)
+            {
+                <div id="welcomeMessage" class="alert alert-success" role="alert">@ViewBag.WelcomeMessage</div>
+            }
+
+            <h2>Appartement List</h2>
+
+            <!-- Search Form -->
+            <form asp-action="Index" method="get" class="mb-4">
+                <div class="row g-2">
+                    <div class="col-auto">
+                        <input type="text" name="searchLocalite" class="form-control" placeholder="Search by Localite" />
+                    </div>
+                    <div class="col-auto">
+                        <input type="number" name="minValeur" class="form-control" placeholder="Min Value" step="0.01" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Apartment List -->
+            @if (Model != null && Model.Any())
+            {
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Number</th>
+                            <th>Localite</th>
+                            <th>Valeur</th>
+                            <th>Propriétaire</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var appartement in Model)
+                        {
+                            <tr>
+                                <td>@appartement.NumApp</td>
+                                <td>@appartement.Localite</td>
+                                <td>@appartement.Valeur</td>
+                                <td>@appartement.Propriétaire?.Nom</td>
+                                <td>
+                                    <a asp-action="Rent" asp-route-id="@appartement.NumApp" class="btn btn-success btn-sm">Rent</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p class="text-muted">No apartments found.</p>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Check if welcome message exists
+            var welcomeMessage = $('#welcomeMessage');
+            if (welcomeMessage.length) {
+                // Hide the message after 5 seconds (5000 milliseconds)
+                setTimeout(function() {
+                    welcomeMessage.fadeOut('slow', function() {
+                        $(this).remove(); // Remove the element after fading out
+                    });
+                }, 5000);
+            }
+        });
+    </script>
+}
