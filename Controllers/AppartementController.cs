@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
 using System.Threading.Tasks;
-using miniprojet.Models;
 
 namespace miniprojet.Controllers
 {
@@ -48,33 +47,6 @@ namespace miniprojet.Controllers
 
             var model = await appartements.ToListAsync();
             return View(model);
-        }
-
-        // GET: Rent apartment
-        public async Task<IActionResult> Rent(int id)
-        {
-            var userId = HttpContext.Session.GetString("UserId");
-            if (string.IsNullOrEmpty(userId))
-                return RedirectToAction("Login", "Account");
-
-            var appartement = await _context.Appartements.FindAsync(id);
-            if (appartement == null)
-                return NotFound();
-
-            // Simulate rental by creating a Location record
-            var location = new Location
-            {
-                IdLoc = int.Parse(userId), // Assuming user is Locataire
-                NumApp = id,
-                DatLoc = DateTime.Now,
-                NbrMois = 12,
-                Montant = appartement.Valeur
-            };
-
-            _context.Locations.Add(location);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction("Index");
         }
     }
 }

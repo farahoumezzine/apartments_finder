@@ -1,0 +1,134 @@
+﻿
+@model miniprojet.Models.Appartement
+
+<style>
+    .content-wrapper {
+        padding-top: 80px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .form-container {
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        padding: 15px;
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+        .form-container form {
+            width: 100%;
+        }
+
+        .form-container .card {
+            width: 100%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .form-container .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-container .btn {
+            width: 100%;
+        }
+
+    .alert {
+        margin-bottom: 1rem;
+    }
+
+    @@media (max-width: 576px) {
+        .content-wrapper {
+            padding-top: 60px;
+        }
+
+        .form-container {
+            padding: 10px;
+            max-height: calc(100vh - 80px);
+        }
+
+            .form-container .card-body {
+                padding: 1rem;
+            }
+
+        h1 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<div class="content-wrapper">
+    <div class="form-container">
+        <h1 class="my-4 text-center">Add New Apartment</h1>
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="CreateApartment" asp-controller="Admin" method="post" onsubmit="console.log('Form submitted with IdProp:', $('select[name=IdProp]').val());">
+                    @if (!ViewData.ModelState.IsValid && ViewData.ModelState[""]?.Errors.Any() == true)
+                    {
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach (var error in ViewData.ModelState[""].Errors)
+                                {
+                                    <li>@error.ErrorMessage</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    <div class="mb-3">
+                        <label asp-for="NumApp" class="form-label">Apartment Number</label>
+                        <input asp-for="NumApp" class="form-control" required />
+                        <span asp-validation-for="NumApp" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Localite" class="form-label">Location</label>
+                        <input asp-for="Localite" class="form-control" required />
+                        <span asp-validation-for="Localite" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NbrPièces" class="form-label">Number of Rooms</label>
+                        <input asp-for="NbrPièces" class="form-control" required type="number" min="1" />
+                        <span asp-validation-for="NbrPièces" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Valeur" class="form-label">Value</label>
+                        <input asp-for="Valeur" class="form-control" required />
+                        <span asp-validation-for="Valeur" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="IdProp" class="form-label">Proprietor</label>
+                        <select asp-for="IdProp" class="form-control" asp-items="@(new SelectList(ViewBag.Proprietaires, "IdProp", "FullName"))" required>
+                            <option value="">Select a proprietor</option>
+                        </select>
+                        <span asp-validation-for="IdProp" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                    <div class="text-center mt-3">
+                        <a asp-action="ManageApartments" class="btn btn-link">Back to List</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("form").on("submit", function (e) {
+                console.log("Submitting form...");
+                if (!this.checkValidity()) {
+                    e.preventDefault();
+                    console.log("Form validation failed");
+                    return false;
+                }
+            });
+        });
+    </script>
+}

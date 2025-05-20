@@ -7,15 +7,13 @@ namespace miniprojet.Models
         [Key]
         public int IdProp { get; set; }
 
-        [Required(ErrorMessage = "Last name is required")]
-        [StringLength(50)]
+        [Required(ErrorMessage = "Name is required")]
         public string Nom { get; set; }
 
         [Required(ErrorMessage = "First name is required")]
-        [StringLength(50)]
         public string Prénom { get; set; }
 
-        public List<Appartement> Appartements { get; set; }
+        public ICollection<Appartement> Appartements { get; set; }
     }
 }
 

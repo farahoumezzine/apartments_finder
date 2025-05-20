@@ -7,18 +7,16 @@ namespace miniprojet.Models
         [Key]
         public int NumApp { get; set; }
 
-        [Required]
-        public int IdProp { get; set; }
-
-        [Required(ErrorMessage = "Locality is required")]
-        [StringLength(100)]
+        [Required(ErrorMessage = "Location is required")]
         public string Localite { get; set; }
 
-        [Range(1, 10, ErrorMessage = "Number of rooms must be between 1 and 10")]
-        public int NbrPièces { get; set; }
+        [Required(ErrorMessage = "Number of rooms is required")]
+        public int NbrPièces { get; set; } // Made non-nullable to match database
 
-        [Range(0, double.MaxValue, ErrorMessage = "Value must be positive")]
+        [Required(ErrorMessage = "Value is required")]
         public decimal Valeur { get; set; }
+
+        public int IdProp { get; set; }
 
         public Propriétaire Propriétaire { get; set; }
     }
