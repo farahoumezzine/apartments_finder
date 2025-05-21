@@ -7,6 +7,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.IO;
+using Microsoft.AspNetCore.Hosting;
 
 namespace miniprojet.Controllers
 {
@@ -14,11 +16,13 @@ namespace miniprojet.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<AdminController> _logger;
+        private readonly IWebHostEnvironment _hostingEnvironment;
 
-        public AdminController(ApplicationDbContext context, ILogger<AdminController> logger)
+        public AdminController(ApplicationDbContext context, ILogger<AdminController> logger, IWebHostEnvironment hostingEnvironment)
         {
             _context = context;
             _logger = logger;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         // GET: Admin Dashboard
@@ -60,26 +64,47 @@ namespace miniprojet.Controllers
                 ModelState.AddModelError("", "No proprietors available. Please add a proprietor first.");
                 return View();
             }
-            ViewBag.Proprietaires = proprietors.Select(p => new { p.IdProp, FullName = $"{p.Nom} {p.Prénom} (ID: {p.IdProp})" });
+            ViewBag.Proprietaires = proprietors.Select(p => new { p.IdProp, FullName = $"{p.Nom} {p.Prénom} (ID: {p.IdProp})" }).ToList();
             return View();
         }
 
         // POST: Create new apartment
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateApartment(Appartement appartement)
+        public async Task<IActionResult> CreateApartment(Appartement appartement, IFormFile imageFile)
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("Role")) || HttpContext.Session.GetString("Role") != "Admin")
             {
                 return RedirectToAction("Login", "Account");
             }
 
-            _logger.LogInformation("POST CreateApartment called with: {@Appartement}", appartement);
+            _logger.LogInformation("POST CreateApartment called with: {@Appartement}, ImageFile: {@ImageFile}", appartement, imageFile);
 
             if (ModelState.IsValid || (appartement.IdProp > 0))
             {
                 try
                 {
+                    // Handle image upload
+                    if (imageFile != null && imageFile.Length > 0)
+                    {
+                        _logger.LogInformation("Processing image upload: Length={Length}, FileName={FileName}", imageFile.Length, imageFile.FileName);
+                        var uploadsFolder = Path.Combine(_hostingEnvironment.WebRootPath, "uploads");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            _logger.LogInformation("Creating uploads folder at: {Path}", uploadsFolder);
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+                        var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        _logger.LogInformation("Saving file to: {FilePath}", filePath);
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await imageFile.CopyToAsync(stream);
+                        }
+                        appartement.ImagePath = $"/uploads/{uniqueFileName}";
+                        _logger.LogInformation("Image saved with path: {ImagePath}", appartement.ImagePath);
+                    }
+
                     _logger.LogInformation("IdProp value before save: {IdProp}", appartement.IdProp);
                     _context.Add(appartement);
                     await _context.SaveChangesAsync();
@@ -102,7 +127,8 @@ namespace miniprojet.Controllers
                 }
             }
 
-            ViewBag.Proprietaires = _context.Propriétaires.ToList().Select(p => new { p.IdProp, FullName = $"{p.Nom} {p.Prénom} (ID: {p.IdProp})" });
+            // Ensure ViewBag.Proprietaires is properly typed
+            ViewBag.Proprietaires = _context.Propriétaires.ToList().Select(p => new { p.IdProp, FullName = $"{p.Nom} {p.Prénom} (ID: {p.IdProp})" }).ToList();
             return View(appartement);
         }
 
@@ -127,14 +153,14 @@ namespace miniprojet.Controllers
                 return NotFound();
             }
 
-            ViewBag.Proprietaires = _context.Propriétaires.ToList().Select(p => new { p.IdProp, FullName = $"{p.Nom} {p.Prénom} (ID: {p.IdProp})" });
+            ViewBag.Proprietaires = _context.Propriétaires.ToList().Select(p => new { p.IdProp, FullName = $"{p.Nom} {p.Prénom} (ID: {p.IdProp})" }).ToList();
             return View(appartement);
         }
 
         // POST: Edit apartment
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditApartment(int id, Appartement appartement)
+        public async Task<IActionResult> EditApartment(int id, Appartement appartement, IFormFile imageFile)
         {
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("Role")) || HttpContext.Session.GetString("Role") != "Admin")
             {
@@ -151,6 +177,23 @@ namespace miniprojet.Controllers
             {
                 _logger.LogWarning("Id mismatch in EditApartment. URL id: {Id}, Appartement.NumApp: {NumApp}", id, appartement.NumApp);
                 return NotFound();
+            }
+
+            // Handle image upload or update
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(_hostingEnvironment.WebRootPath, "uploads");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+                var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(stream);
+                }
+                appartement.ImagePath = $"/uploads/{uniqueFileName}";
             }
 
             // Temporary diagnostic bypass
@@ -217,7 +260,7 @@ namespace miniprojet.Controllers
                 }
             }
 
-            ViewBag.Proprietaires = _context.Propriétaires.ToList().Select(p => new { p.IdProp, FullName = $"{p.Nom} {p.Prénom} (ID: {p.IdProp})" });
+            ViewBag.Proprietaires = _context.Propriétaires.ToList().Select(p => new { p.IdProp, FullName = $"{p.Nom} {p.Prénom} (ID: {p.IdProp})" }).ToList();
             return View(appartement);
         }
 
@@ -267,7 +310,7 @@ namespace miniprojet.Controllers
         // GET: Logout
         public IActionResult Logout()
         {
-            HttpContext.Session.Clear(); // Clear all session data
+            HttpContext.Session.Clear();
             Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";

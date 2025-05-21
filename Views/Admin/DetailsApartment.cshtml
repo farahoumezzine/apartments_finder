@@ -1,0 +1,46 @@
+﻿
+@model miniprojet.Models.Appartement
+
+<div class="content-wrapper" style="padding-top: 80px;">
+    <div class="container">
+        <div class="page-header">
+            <h1>Apartment Details</h1>
+            <a asp-action="ManageApartments" class="btn btn-secondary">Back</a>
+        </div>
+        <div class="card shadow-lg border-0">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Apartment Number</label>
+                    <p>@Model.NumApp</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Location</label>
+                    <p>@Model.Localite</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Number of Rooms</label>
+                    <p>@Model.NbrPièces</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Value</label>
+                    <p>@Model.Valeur</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Proprietor</label>
+                    <p>@(Model.Propriétaire != null ? $"{Model.Propriétaire.Nom} {Model.Propriétaire.Prénom} (ID: {Model.IdProp})" : "No Proprietor")</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Image</label>
+                    @if (!string.IsNullOrEmpty(Model.ImagePath))
+                    {
+                        <img src="@Model.ImagePath" alt="Apartment Image" style="max-width: 400px; max-height: 400px;" class="img-thumbnail" />
+                    }
+                    else
+                    {
+                        <p>No image uploaded</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

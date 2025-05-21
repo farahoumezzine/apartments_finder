@@ -124,5 +124,5 @@ D:\2eme DEV\S2\.Net\miniprojet\miniprojet\obj\Debug\net8.0\refint\miniprojet.dll
 D:\2eme DEV\S2\.Net\miniprojet\miniprojet\obj\Debug\net8.0\miniprojet.pdb
 D:\2eme DEV\S2\.Net\miniprojet\miniprojet\obj\Debug\net8.0\miniprojet.genruntimeconfig.cache
 D:\2eme DEV\S2\.Net\miniprojet\miniprojet\obj\Debug\net8.0\ref\miniprojet.dll
-D:\2eme DEV\S2\.Net\miniprojet\miniprojet\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
 D:\2eme DEV\S2\.Net\miniprojet\miniprojet\obj\Debug\net8.0\miniprojet.sourcelink.json
+D:\2eme DEV\S2\.Net\miniprojet\miniprojet\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
