@@ -119,7 +119,7 @@ namespace miniprojet.Controllers
             }
             else
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).Distinct();
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).Distinct().ToList();
                 _logger.LogWarning("ModelState invalid for apartment creation. Errors: {@Errors}", errors);
                 foreach (var error in errors)
                 {
@@ -127,7 +127,6 @@ namespace miniprojet.Controllers
                 }
             }
 
-            // Ensure ViewBag.Proprietaires is properly typed
             ViewBag.Proprietaires = _context.Propriétaires.ToList().Select(p => new { p.IdProp, FullName = $"{p.Nom} {p.Prénom} (ID: {p.IdProp})" }).ToList();
             return View(appartement);
         }
@@ -182,18 +181,22 @@ namespace miniprojet.Controllers
             // Handle image upload or update
             if (imageFile != null && imageFile.Length > 0)
             {
+                _logger.LogInformation("Processing image upload: Length={Length}, FileName={FileName}", imageFile.Length, imageFile.FileName);
                 var uploadsFolder = Path.Combine(_hostingEnvironment.WebRootPath, "uploads");
                 if (!Directory.Exists(uploadsFolder))
                 {
+                    _logger.LogInformation("Creating uploads folder at: {Path}", uploadsFolder);
                     Directory.CreateDirectory(uploadsFolder);
                 }
                 var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
                 var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                _logger.LogInformation("Saving file to: {FilePath}", filePath);
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await imageFile.CopyToAsync(stream);
                 }
                 appartement.ImagePath = $"/uploads/{uniqueFileName}";
+                _logger.LogInformation("Image saved with path: {ImagePath}", appartement.ImagePath);
             }
 
             // Temporary diagnostic bypass
@@ -252,7 +255,8 @@ namespace miniprojet.Controllers
             }
             else
             {
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).Distinct();
+                // Collect errors into a list before adding to ModelState to avoid modifying during enumeration
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).Distinct().ToList();
                 _logger.LogWarning("ModelState invalid for apartment update. Errors: {@Errors}", errors);
                 foreach (var error in errors)
                 {
@@ -261,6 +265,33 @@ namespace miniprojet.Controllers
             }
 
             ViewBag.Proprietaires = _context.Propriétaires.ToList().Select(p => new { p.IdProp, FullName = $"{p.Nom} {p.Prénom} (ID: {p.IdProp})" }).ToList();
+            return View(appartement);
+        }
+
+        // GET: Details apartment
+        public async Task<IActionResult> DetailsApartment(int? id)
+        {
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("Role")) || HttpContext.Session.GetString("Role") != "Admin")
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (id == null)
+            {
+                _logger.LogWarning("DetailsApartment GET called with null id");
+                return NotFound();
+            }
+
+            var appartement = await _context.Appartements
+                .Include(a => a.Propriétaire)
+                .FirstOrDefaultAsync(m => m.NumApp == id);
+
+            if (appartement == null)
+            {
+                _logger.LogWarning("Apartment not found for id: {Id}", id);
+                return NotFound();
+            }
+
             return View(appartement);
         }
 
